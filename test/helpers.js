@@ -13,6 +13,7 @@ var which = require('which');
 var proxyquire = require('proxyquire').noCallThru().noPreserveCache();
 var spawnSync = require('spawn-sync');
 var config = require('../lib/config');
+var nock = require('nock');
 
 // For better promise errors
 Q.longStackSupport = true;
@@ -161,7 +162,7 @@ exports.TempDir = (function() {
     return TempDir;
 })();
 
-exports.expectEvent = function expectEvent(emitter, eventName) {
+exports.expectEvent = function expectEvent (emitter, eventName) {
     var deferred = Q.defer();
 
     emitter.once(eventName, function () {
@@ -219,7 +220,7 @@ exports.command = function (command, stubs) {
 };
 
 exports.run = function (command, args) {
-    var logger = command.apply(command, args || []);
+    var logger = command.apply(null, args || []);
 
     // Hack so we can intercept prompring for data
     logger.prompt = function(data) {
@@ -302,8 +303,11 @@ exports.localUrl = function (localPath) {
 // example: runBin('install') --> $ bower install
 exports.runBin = function (args) {
     args = args || [];
-
-    var name = path.resolve(__dirname, '../bin/bower');
-
-    return spawnSync(name, args);
+    args.unshift(path.resolve(__dirname, '../bin/bower'));
+    return spawnSync('node', args);
 };
+
+
+afterEach(function () {
+    nock.cleanAll();
+});
